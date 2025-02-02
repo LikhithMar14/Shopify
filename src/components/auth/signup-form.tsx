@@ -19,6 +19,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useFormStatus } from "react-dom";
 import { Loader2 } from "lucide-react";
+
 const SignUpForm = () => {
   const [serverMessage, setServerMessage] = useState<string | null>(null);
   const form = useForm<Signup>({
@@ -42,11 +43,10 @@ const SignUpForm = () => {
       toast.error(response.message)
       form.reset()
     } 
-    
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white p-6 rounded-2xl shadow-lg">
+    <div className="max-w-md mx-auto bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
@@ -54,9 +54,13 @@ const SignUpForm = () => {
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name</FormLabel>
+                <FormLabel className="text-gray-700 dark:text-white">Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your name" {...field} />
+                  <Input
+                    placeholder="Enter your name"
+                    {...field}
+                    className="bg-white dark:bg-gray-700 text-black dark:text-white"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -67,12 +71,13 @@ const SignUpForm = () => {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel className="text-gray-700 dark:text-white">Email</FormLabel>
                 <FormControl>
                   <Input
                     type="email"
                     placeholder="Enter your email"
                     {...field}
+                    className="bg-white dark:bg-gray-700 text-black dark:text-white"
                   />
                 </FormControl>
                 <FormMessage />
@@ -84,12 +89,13 @@ const SignUpForm = () => {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel className="text-gray-700 dark:text-white">Password</FormLabel>
                 <FormControl>
                   <Input
                     type="password"
                     placeholder="Enter your password"
                     {...field}
+                    className="bg-white dark:bg-gray-700 text-black dark:text-white"
                   />
                 </FormControl>
                 <FormMessage />
@@ -101,12 +107,13 @@ const SignUpForm = () => {
             name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Confirm Password</FormLabel>
+                <FormLabel className="text-gray-700 dark:text-white">Confirm Password</FormLabel>
                 <FormControl>
                   <Input
                     type="password"
                     placeholder="Confirm your password"
                     {...field}
+                    className="bg-white dark:bg-gray-700 text-black dark:text-white"
                   />
                 </FormControl>
                 <FormMessage />
@@ -114,8 +121,7 @@ const SignUpForm = () => {
             )}
           />
 
-            <SubmitButton/>
-
+          <SubmitButton />
         </form>
       </Form>
     </div>
@@ -129,11 +135,12 @@ export function SubmitButton() {
     <Button
       disabled={pending}
       type="submit"
-      className="w-full bg-green-600 hover:bg-green-700 text-white font-medium flex items-center justify-center space-x-2"
+      className="w-full bg-green-600 hover:bg-green-700 text-white font-medium flex items-center justify-center space-x-2 dark:bg-green-700 dark:hover:bg-green-800"
     >
       {pending && <Loader2 className="animate-spin mr-2 h-4 w-4" />}
       <span>{pending ? "Signing up..." : "SignUp"}</span>
     </Button>
   );
 }
+
 export { SignUpForm };

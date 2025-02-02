@@ -17,7 +17,7 @@ const UserButton = async () => {
   if (!session) {
     return (
       <Button asChild>
-        <Link href='/sign-in'>
+        <Link href='/login'>
           <UserIcon /> Sign In
         </Link>
       </Button>
@@ -38,7 +38,7 @@ const UserButton = async () => {
             </Button>
           </div>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className='w-56' align='end' forceMount>
+        <DropdownMenuContent className='w-56' align='center' forceMount>
           <DropdownMenuLabel className='font-normal'>
             <div className='flex flex-col space-y-1'>
             <div className='text-sm text-muted-foreground leading-none'>

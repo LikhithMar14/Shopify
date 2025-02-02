@@ -8,6 +8,7 @@ import {
     apiAuthPrefix,
     authRoutes
 } from "@/lib/routes"
+import { NextResponse } from "next/server";
 
 const { auth } = NextAuth(authConfig);
 
@@ -44,16 +45,23 @@ export default auth((req) => {
       }
       return
     
-
-  
-
-
-    
-
-    
-
-    
 })
+export async function middleware(request: Request) {
+  const session = await auth();
+  const cookies = request.headers.get("cookie") || "";
+
+  // Check if sessionCartId exists in cookies
+  if (!cookies.includes("sessionCartId")) {
+    const sessionCartId = crypto.randomUUID();
+    console.log("Generated sessionCartId:", sessionCartId);
+
+    const response = NextResponse.next();
+    response.headers.append("Set-Cookie", `sessionCartId=${sessionCartId}; Path=/; HttpOnly; Secure`);
+    return response;
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
     matcher: [

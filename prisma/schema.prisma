@@ -32,18 +32,20 @@ model Product {
 }
 
 model User {
-  id             String    @id @default(cuid())
-  name           String   @default("NO_NAME")
-  role           Role      @default(USER)
-  email          String   @unique(map: "user_email_idx")
-  emailVerified  DateTime?
-  address        Json?
+  id            String    @id @default(cuid())
+  name          String    @default("NO_NAME")
+  role          Role      @default(USER)
+  email         String    @unique(map: "user_email_idx")
+  emailVerified DateTime?
+  address       Json?
   paymentMethod String?
-  password       String
-  image          String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  accounts       Account[]
+  password      String
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  accounts      Account[]
+
+  cart Cart?
 }
 
 enum Role {
@@ -65,4 +67,19 @@ model Account {
   user               User      @relation(fields: [userId], references: [id])
 
   @@unique([providerId, providerAccountId])
+}
+
+model Cart {
+  id            String  @id @default(cuid())
+  userId        String? @unique
+  sessionCartId String
+  items         Json[]  @default([])
+  itemsPrice    Decimal
+  totalPrice    Decimal
+  shippingPrice Decimal
+  taxPrice      Decimal
+
+  user       User?    @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+  upadatedAt DateTime @updatedAt
 }

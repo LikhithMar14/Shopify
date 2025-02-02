@@ -15,10 +15,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   callbacks: {
     async session({ token, session }) {
+      if (token.id) session.user.id = token.id;  
       if (token.name) session.user.name = token.name;
       if (token.role) session.user.role = token.role;
       return session;
     },
+
     async jwt({ token }) {
       if (!token.sub) {
         token.role = "USER"; 
@@ -27,16 +29,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       const existingUser = await db.user.findUnique({ where: { id: token.sub } });
 
-
       if (!existingUser) {
         token.role = "USER";
         return token;
       }
 
+      token.id = existingUser.id;  
       token.role = existingUser.role;
       token.name = existingUser.name;
       return token;
-    },
+    }
   },
 
   ...authConfig,
@@ -44,8 +46,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
 
 export type ExtendedUser = DefaultSession["user"] & {
+  id: string;  
   role: "ADMIN" | "USER";
 };
+
 
 declare module "next-auth" {
   interface Session {
@@ -53,9 +57,10 @@ declare module "next-auth" {
   }
 }
 
-// Extend JWT token type
+
 declare module "next-auth/jwt" {
   interface JWT {
+    id?: string;  
     role?: "ADMIN" | "USER";
   }
 }

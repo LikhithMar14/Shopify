@@ -42,11 +42,8 @@ export const Login = async (values: LoginType) => {
           return {message:"Login Successful", success: true };
       }
     }
-    return {
-      message:"Login failed",
-      success:false
-    }
     throw error;
+    
   }
 };
 

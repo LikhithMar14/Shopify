@@ -12,7 +12,7 @@ export default {
         password: {},
       },
         async authorize(credentials){
-            console.log("Hello1")
+
             const validatedFields = LoginSchema.safeParse(credentials);
             if(validatedFields.success){
                 const {email,password} = validatedFields.data;
@@ -22,9 +22,7 @@ export default {
                 })
                 if(!existingUser || !existingUser.password)return null
                 const PasswordMatch =  await bcrypt.compare(password,existingUser.password)
-                console.log("Hello2")
 
-                console.log(existingUser)
 
                 if(PasswordMatch){
                   return existingUser
