@@ -7,10 +7,16 @@ import db from "@/db";
 import { revalidatePath } from "next/cache";
 
 const CalculatePrice = (items: CartItemType[]) => {
-  const itemsPrice = (items.reduce((acc, item) => acc + Number(item.price) * Number(item.qty), 0)).toString();
+  const itemsPrice = items
+    .reduce((acc, item) => acc + Number(item.price) * Number(item.qty), 0)
+    .toString();
   const shippingPrice = (Number(itemsPrice) > 100 ? 7 : 0).toString();
   const taxPrice = (Number(itemsPrice) * 0.07).toFixed();
-  const totalPrice = (Number(itemsPrice) + Number(shippingPrice) + Number(taxPrice)).toString();
+  const totalPrice = (
+    Number(itemsPrice) +
+    Number(shippingPrice) +
+    Number(taxPrice)
+  ).toString();
   return {
     itemsPrice,
     shippingPrice,
@@ -22,7 +28,7 @@ const CalculatePrice = (items: CartItemType[]) => {
 export async function addItemToCart(data: CartItemType) {
   try {
     const session = await auth();
-    const sessionCartId = (await cookies()).get('sessionCartId')?.value;
+    const sessionCartId = (await cookies()).get("sessionCartId")?.value;
     let userId = session?.user?.id ?? undefined;
 
     if (!sessionCartId) {
@@ -34,8 +40,7 @@ export async function addItemToCart(data: CartItemType) {
 
     const cart = await getMyCart();
 
-    const item: CartItemType = {
-      cartId: sessionCartId,
+    const item = {
       productId: data.productId,
       name: data.name,
       slug: data.slug,
@@ -52,10 +57,11 @@ export async function addItemToCart(data: CartItemType) {
       throw new Error("Product not found");
     }
 
-    const { taxPrice, totalPrice, itemsPrice, shippingPrice } = CalculatePrice([item]);
+    const { taxPrice, totalPrice, itemsPrice, shippingPrice } = CalculatePrice([
+      item,
+    ]);
 
     if (!cart) {
-      // Create a new cart if it doesn't exist
       const response = await db.cart.create({
         data: {
           items: {
@@ -77,20 +83,18 @@ export async function addItemToCart(data: CartItemType) {
         },
       });
       revalidatePath(`/product/${item.slug}`);
-      console.log("CART IN CREATION: ", response);
+
 
       return {
         success: true,
         message: `${item.name} added to cart`,
       };
     } else {
-      // Check if the item already exists in the cart
       const itemExists = cart.items.find((x) => x.productId === data.productId);
 
       if (itemExists) {
-        console.log("Before: ", cart.items);
 
-        // Check stock before updating quantity
+
         if (Number(itemExists.qty) + 1 > Number(product.stock)) {
           return {
             success: false,
@@ -98,22 +102,22 @@ export async function addItemToCart(data: CartItemType) {
           };
         }
 
-        // Update the quantity of the existing item in the cart
         await db.cartItem.update({
           where: { id: itemExists.id },
           data: {
-            qty: itemExists.qty + 1, // Increment quantity
+            qty: itemExists.qty + 1,
           },
         });
 
-        // Recalculate prices after quantity update
         const updatedCartItems = cart.items.map((item) =>
-          item.productId === data.productId ? { ...item, qty: itemExists.qty + 1 } : item
+          item.productId === data.productId
+            ? { ...item, qty: itemExists.qty + 1 }
+            : item
         );
 
-        const { itemsPrice, shippingPrice, taxPrice, totalPrice } = CalculatePrice(updatedCartItems);
+        const { itemsPrice, shippingPrice, taxPrice, totalPrice } =
+          CalculatePrice(updatedCartItems);
 
-        // Update the cart with new totals
         await db.cart.update({
           where: { id: cart.id },
           data: {
@@ -126,8 +130,10 @@ export async function addItemToCart(data: CartItemType) {
             taxPrice,
           },
         });
+        revalidatePath(`/product/${product.slug}`);
 
-        console.log("Cart after update: ", updatedCartItems);
+
+
 
         return {
           success: true,
@@ -138,7 +144,6 @@ export async function addItemToCart(data: CartItemType) {
           throw new Error("Not enough stock");
         }
 
-        // If the item doesn't exist, create a new CartItem
         const createdItem = await db.cartItem.create({
           data: {
             productId: product.id,
@@ -151,14 +156,12 @@ export async function addItemToCart(data: CartItemType) {
           },
         });
 
-        item.cartId = cart.id;
         cart.items.push(createdItem);
       }
 
-      // Recalculate prices after adding the item
-      const { itemsPrice, shippingPrice, taxPrice, totalPrice } = CalculatePrice(cart.items);
+      const { itemsPrice, shippingPrice, taxPrice, totalPrice } =
+        CalculatePrice(cart.items);
 
-      // Update the cart with the new item and totals
       await db.cart.update({
         where: { id: cart.id },
         data: {
@@ -172,7 +175,8 @@ export async function addItemToCart(data: CartItemType) {
         },
       });
 
-      console.log("Cart after adding item: ", cart.items);
+
+      revalidatePath(`/product/${product.slug}`);
 
       return {
         success: true,
@@ -189,7 +193,7 @@ export async function addItemToCart(data: CartItemType) {
 }
 
 export async function getMyCart() {
-  const sessionCartId = (await cookies()).get('sessionCartId')?.value;
+  const sessionCartId = (await cookies()).get("sessionCartId")?.value;
   if (!sessionCartId) throw new Error("Cart session not found");
 
   const session = await auth();
@@ -207,4 +211,67 @@ export async function getMyCart() {
 
   if (!cart) return undefined;
   return cart;
+}
+export async function removeItemFromCart(productId: string) {
+  try {
+    const sessionCartId = (await cookies()).get("sessionCartId")?.value;
+    if (!sessionCartId) throw new Error("Cart session not found");
+
+    const product = await db.product.findFirst({
+      where: { id: productId },
+    });
+
+    if (!product) throw new Error("Product not found");
+
+    const cart = await getMyCart();
+    if (!cart) throw new Error("Cart not found");
+
+    const exist = cart.items.find((x) => x.productId === productId);
+    if (!exist) throw new Error("Item not found in cart");
+
+    let updatedCartItems = cart.items;
+
+    if (exist.qty === 1) {
+      await db.cartItem.delete({ where: { id: exist.id } });
+      updatedCartItems = cart.items.filter((x) => x.productId !== productId);
+    } else {
+      await db.cartItem.update({
+        where: { id: exist.id },
+        data: { qty: exist.qty - 1 },
+      });
+
+      updatedCartItems = cart.items.map((item) =>
+        item.productId === productId ? { ...item, qty: item.qty - 1 } : item
+      );
+    }
+
+    const { itemsPrice, shippingPrice, taxPrice, totalPrice } =
+      CalculatePrice(updatedCartItems);
+
+    await db.cart.update({
+      where: { id: cart.id },
+      data: {
+        items: {
+          connect: updatedCartItems.map((item) => ({ id: item.id })),
+        },
+        itemsPrice,
+        totalPrice,
+        shippingPrice,
+        taxPrice,
+      },
+    });
+
+    revalidatePath(`/product/${product.slug}`);
+
+    return {
+      success: true,
+      message: `${product.name} was removed from cart`,
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      success: false,
+      message: "Failed to remove item from cart",
+    };
+  }
 }
