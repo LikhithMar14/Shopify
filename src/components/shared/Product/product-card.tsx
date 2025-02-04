@@ -6,13 +6,12 @@ import { Product } from "@/types/product.types";
 
 const ProductCard = ({ product }: { product: Product }) => {
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'INR'
     }).format(price);
   };
 
-  // Generate star rating display
   const renderRating = (rating: string) => {
     return (
       <div className="flex items-center gap-1">

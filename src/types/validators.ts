@@ -1,12 +1,8 @@
 import { formatNumberWithDecimalPlaces } from "@/lib/utils";
 import { z } from "zod";
 
-const currency = z
-  .string()
-  .refine(
-    (value) => /^\d+(\.\d{2})?$/.test(formatNumberWithDecimalPlaces(Number(value))),
-    'Price must have exactly two decimal places'
-  );
+
+
 
 export const insertProductSchema = z.object({
     name: z.string().min(3, 'Name must be at least 3 characters'),
@@ -18,7 +14,7 @@ export const insertProductSchema = z.object({
     images: z.array(z.string()).min(1, 'Product must have at least one image'),
     isFeatured: z.boolean(),
     banner: z.string().nullable(),
-    price: currency,
+    price: z.string(),
 });
 
 export const LoginSchema = z.object({
@@ -49,16 +45,16 @@ export const cartItemSchema = z.object({
   slug:z.string().min(1,"Slug is required"),
   qty:z.number().int().nonnegative("Quantity must be a positive number"),
   image:z.string().min(1,"Image is required"),
-  price:currency
+  price:z.string(),
 
 })
 
 export const insertCartSchema = z.object({
   items:z.array(cartItemSchema),
-  itemsPrice:currency,
-  totalPrice:currency,
-  shippingPrice:currency,
-  taxPrice:currency,
+  itemsPrice:z.string(),
+  totalPrice:z.string(),
+  shippingPrice:z.string(),
+  taxPrice:z.string(),
   sessionCartId:z.string().min(1,"Session cartId is required"),
   userId:z.string().optional().nullable()
 })

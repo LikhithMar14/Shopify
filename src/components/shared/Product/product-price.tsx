@@ -3,21 +3,21 @@ import { cn } from '@/lib/utils';
 const ProductPrice = ({
   value,
   className,
+  currency = '₹', 
 }: {
   value: number;
   className?: string;
+  currency?: string;
 }) => {
 
-  const stringValue = value.toFixed(2);
-
-  const [intValue, floatValue] = stringValue.split('.');
+  const formattedValue = value.toLocaleString();
 
   return (
-    <p className={cn('text-2xl', className)}>
-      <span className='text-xs align-super'>$</span>
-      {intValue}
-      <span className='text-xs align-super'>.{floatValue}</span>
-    </p>
+    <div className={cn('text-2xl font-semibold ', className)}>
+      <div className="text-md text-gray-600">
+        {currency}{formattedValue}
+      </div>
+    </div>
   );
 };
 
