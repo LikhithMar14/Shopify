@@ -8,6 +8,8 @@ export const metadata = {
 
 const CartPage = async () => {
     const cart = await getMyCart();
+
+
     return ( 
         <div className="bg-white">
             <CartTable cart={cart}/>

@@ -49,6 +49,7 @@ export default auth((req) => {
 export async function middleware(request: Request) {
   const session = await auth();
   const cookies = request.headers.get("cookie") || "";
+  
 
 
   if (!cookies.includes("sessionCartId")) {

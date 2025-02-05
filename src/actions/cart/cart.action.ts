@@ -202,7 +202,6 @@ export async function getMyCart() {
   const cart = await db.cart.findFirst({
     where: {
       userId,
-      sessionCartId,
     },
     include: {
       items: true,

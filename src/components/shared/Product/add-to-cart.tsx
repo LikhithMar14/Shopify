@@ -6,12 +6,15 @@ import { CartItemType, CartType } from "@/types/cart.types";
 import { addItemToCart, removeItemFromCart } from "@/actions/cart/cart.action";
 import { Loader, Minus, Plus } from "lucide-react";
 import { useTransition } from "react";
+import { useCartStore } from "@/store/cart.store";
 
 const AddToCart = ({ cart, item }: { cart?: CartType; item: CartItemType }) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const handleAddToCart = async () => {
+
+
     startTransition(async () => {
       const response = await addItemToCart(item);
 
@@ -34,7 +37,9 @@ const AddToCart = ({ cart, item }: { cart?: CartType; item: CartItemType }) => {
   };
 
   const handleRemoveCart = async () => {
+
     startTransition(async () => {
+
       const res = await removeItemFromCart(item.productId);
 
       if (res.success) {

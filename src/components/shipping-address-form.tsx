@@ -15,36 +15,35 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Loader2, LoaderPinwheel } from "lucide-react";
+import { ArrowRight, LoaderPinwheel } from "lucide-react";
 import { toast } from "sonner";
 import { updateUserAddress } from "@/actions/user/user.action";
 
-const ShippingAddress = () => {
+const ShippingAddress = ({ address }: { address?: shippingAddressType }) => {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   const form = useForm<shippingAddressType>({
     resolver: zodResolver(shippingAddressSchema),
     defaultValues: {
-      fullName: "",
-      address: "",
-      city: "",
-      pinCode: "",
-      country: "",
+      fullName: address?.fullName || "",
+      address: address?.address || "",
+      city: address?.city || "",
+      pinCode: address?.pinCode || "",
+      country: address?.country || "",
     },
   });
 
   const onSubmit: SubmitHandler<shippingAddressType> = async (data) => {
     startTransition(async () => {
       try {
-
         const response = await updateUserAddress(data);
-        if(!response.success){
-            toast.error(response.message)
-        }else {
-            toast.success(response.message)
+        if (!response.success) {
+          toast.error(response.message);
+        } else {
+          toast.success(response.message);
         }
-
+        router.push('/payment-method')
       } catch (error) {
         toast.error("Failed to save address. Please try again.");
       }
@@ -93,7 +92,7 @@ const ShippingAddress = () => {
               className="w-full bg-primary text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center gap-2 hover:bg-primary/90 transition-all"
             >
               {isPending ? (
-            <LoaderPinwheel className="w-5 h-5 animate-spin" />
+                <LoaderPinwheel className="w-5 h-5 animate-spin" />
               ) : (
                 <ArrowRight className="w-5 h-5" />
               )}
