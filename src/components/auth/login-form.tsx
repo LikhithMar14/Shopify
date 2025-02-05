@@ -14,7 +14,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Login as LoginType } from "@/types/user.types";
 import { LoginSchema } from "@/types/validators";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Login } from "@/actions/user/login.action";
 import { toast } from "sonner";
 import { useFormStatus } from "react-dom";
@@ -22,24 +22,27 @@ import { Loader2 } from "lucide-react";
 
 const LoginForm = () => {
   const [serverMessage, setServerMessage] = useState<string | null | undefined>(null);
+  const [isPending, startTransition] = useTransition(); 
 
-  const onSubmit = async (data: LoginType) => {
+  const onSubmit = (data: LoginType) => {
     setServerMessage(null);
-  
-    try {
-      const response = await Login(data);
-      setServerMessage(response.message);
-  
-      console.log("Toast Triggered");
-      if (response.success) {
-        toast.success(response.message);
-      } else {
-        toast.error(response.message);
+    
+    startTransition(async () => { 
+      try {
+        const response = await Login(data);
+        setServerMessage(response.message);
+
+        if (response.success) {
+          toast.success(response.message);
+        } else {
+          toast.error(response.message);
+        }
+
+        form.reset();
+      } catch (error) {
+        toast.success("Login Successful");
       }
-      form.reset();
-    } catch (error) {
-      toast.success("Login Successful");
-    }
+    });
   };
 
   const form = useForm<LoginType>({
@@ -91,7 +94,7 @@ const LoginForm = () => {
             )}
           />
           <div className="flex justify-center">
-            <SubmitButton />
+            <SubmitButton isPending={isPending} />
           </div>
         </form>
       </Form>
@@ -99,17 +102,15 @@ const LoginForm = () => {
   );
 };
 
-export function SubmitButton() {
-  const { pending } = useFormStatus();
-
+export function SubmitButton({ isPending }: { isPending: boolean }) {
   return (
     <Button
-      disabled={pending}
+      disabled={isPending}
       type="submit"
       className="w-full bg-green-600 hover:bg-green-700 text-white font-medium flex items-center justify-center space-x-2 dark:bg-green-700 dark:hover:bg-green-800"
     >
-      {pending && <Loader2 className="animate-spin mr-2 h-4 w-4" />}
-      <span>{pending ? "Signing in..." : "Log In"}</span>
+      {isPending && <Loader2 className="animate-spin mr-2 h-4 w-4" />}
+      <span>{isPending ? "Signing in..." : "Log In"}</span>
     </Button>
   );
 }

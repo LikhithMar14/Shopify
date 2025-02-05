@@ -50,7 +50,7 @@ export async function middleware(request: Request) {
   const session = await auth();
   const cookies = request.headers.get("cookie") || "";
 
-  // Check if sessionCartId exists in cookies
+
   if (!cookies.includes("sessionCartId")) {
     const sessionCartId = crypto.randomUUID();
     console.log("Generated sessionCartId:", sessionCartId);
@@ -65,9 +65,7 @@ export async function middleware(request: Request) {
 
 export const config = {
     matcher: [
-      // Skip Next.js internals and all static files, unless found in search params
       '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-      // Always run for API routes
       '/(api|trpc)(.*)',
     ],
   }

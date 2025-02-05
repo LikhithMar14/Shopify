@@ -3,8 +3,7 @@ import authConfig from "@/auth.config";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import db from "@/db";
 import { type DefaultSession } from "next-auth";
-import { JWT } from "next-auth/jwt";
-import { Role as UserRole } from "@prisma/client";
+
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),

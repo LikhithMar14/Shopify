@@ -1,7 +1,16 @@
-const CartPage = () => {
+import { getMyCart } from "@/actions/cart/cart.action";
+import CartTable from "@/components/cart/cart-table";
+
+export const metadata = {
+    title: 'Shopping Cart'
+}
+
+
+const CartPage = async () => {
+    const cart = await getMyCart();
     return ( 
         <div className="bg-white">
-            <h1>Cart Page</h1>
+            <CartTable cart={cart}/>
         </div>
      );
 }
