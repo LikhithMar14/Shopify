@@ -27,32 +27,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.role = "USER";
         return token;
       }
-
       token.id = token.sub;
-
-      if(token.id){
-        if(trigger === "signIn" || trigger === "signUp"){
-          const cookiesObject = await cookies();
-          const sessionCartId = cookiesObject.get('sessionCartId')?.value;
-          if(sessionCartId){
-            const sessionCart = await db.cart.findFirst({
-              where:{sessionCartId}
-            });
-            if(sessionCart){
-              await db.cart.deleteMany({
-                where:{userId:token.id}
-              })
-              await db.cart.update({
-                where:{id:sessionCart.id},
-                data:{
-                  userId:token.id
-                }
-              })
-            }
-          }
-
-        }
-      }
       return token;
     },
 

@@ -1,72 +1,65 @@
 import NextAuth from "next-auth";
 import authConfig from "@/auth.config";
-
-
 import {
-    DEFAULT_LOGIN_REDIRECT,
-    publicRoutes,
-    apiAuthPrefix,
-    authRoutes
-} from "@/lib/routes"
+  DEFAULT_LOGIN_REDIRECT,
+  publicRoutes,
+  authRoutes,
+  allowRoutes,
+  apiAuthPrefix
+} from "@/lib/routes";
 import { NextResponse } from "next/server";
 
 const { auth } = NextAuth(authConfig);
 
+export default auth(async (req) => {
+  const { nextUrl } = req;
+  const path = nextUrl.pathname;
+  const isLoggedIn = !!req.auth;
+  const isPublicPath = publicRoutes.includes(path);
+  const isAuthRoute = authRoutes.includes(path);
+  const isAllowRoute = allowRoutes.find((route) => path.startsWith(route));
+  const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
 
 
+  if(isApiAuthRoute){
+    return NextResponse.next()
+  }
+  if(isLoggedIn && isAuthRoute){
+    return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+  }
+  if(isPublicPath){
 
-/*
-                    node_modules/next-auth/lib/index.d.ts
-                export interface NextAuthRequest extends NextRequest {
-                    auth: Session | null;
-                }
 
-*/
-
-export default auth((req) => {
-    const path = req.nextUrl.pathname;
-    const { nextUrl } = req
-    const isLoggedIn = !!req.auth
-    const isPublicPath = publicRoutes.includes(path);
-    const isAuthRoute = authRoutes.includes(path);
-    const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
     
-    if (isApiAuthRoute) {
-        return ;
-      }
-      if (isAuthRoute) {
-        if (isLoggedIn) {
-          return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl))
-        }
-        return ;
-      }
-      if (!isLoggedIn && !isPublicPath) {
-        return Response.redirect(new URL('/login', nextUrl))
-      }
-      return
-    
-})
-export async function middleware(request: Request) {
-  const session = await auth();
-  const cookies = request.headers.get("cookie") || "";
+    return NextResponse.next();
+  }
+  if( !isAllowRoute && !isPublicPath && !isLoggedIn){
+
+
+    return NextResponse.redirect(new URL("/login", nextUrl));
+  }
+
+ 
   
-
-
+  const cookies = req.headers.get("cookie") || "";
   if (!cookies.includes("sessionCartId")) {
     const sessionCartId = crypto.randomUUID();
-    console.log("Generated sessionCartId:", sessionCartId);
+
 
     const response = NextResponse.next();
-    response.headers.append("Set-Cookie", `sessionCartId=${sessionCartId}; Path=/; HttpOnly; Secure`);
+    response.headers.append(
+      "Set-Cookie",
+      `sessionCartId=${sessionCartId}; Path=/; HttpOnly; Secure`
+    );
     return response;
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
-    matcher: [
-      '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-      '/(api|trpc)(.*)',
-    ],
-  }
+  matcher: [
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/(api|trpc)(.*)",
+  ],
+};

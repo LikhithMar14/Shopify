@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/auth";
-import { CartItemType } from "@/types/cart.types";
+import { CartItemType, CartType } from "@/types/cart.types";
 import { cookies } from "next/headers";
 import db from "@/db";
 import { revalidatePath } from "next/cache";
@@ -272,5 +272,63 @@ export async function removeItemFromCart(productId: string) {
       success: false,
       message: "Failed to remove item from cart",
     };
+  }
+}
+export async function deleteCartByUserId() {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    await db.cart.deleteMany({
+      where: { userId: session.user.id },
+    });
+
+    return { success: true, message: "Cart deleted successfully" };
+  } catch (err) {
+    console.error("Error deleting cart:", err);
+    return { success: false, message: "Failed to delete cart" };
+  }
+}
+
+
+export async function createCart(info: CartType) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const { itemsPrice, shippingPrice, taxPrice, totalPrice } = CalculatePrice(info.items);
+
+    const cart = await db.cart.create({
+      data: {
+        userId: session.user.id,
+        items: {
+          create: info.items.map(item => ({
+            productId: item.productId,
+            name: item.name,
+            slug: item.slug,
+            qty: item.qty,
+            image: item.image,
+            price: item.price,
+          })),
+        },
+        itemsPrice,
+        totalPrice,
+        shippingPrice,
+        taxPrice,
+        sessionCartId: info.sessionCartId,
+      },
+      include: { items: true },
+    });
+
+    revalidatePath("/cart");
+
+    return { success: true, message: "Cart created successfully", cart };
+  } catch (err) {
+    console.error("Error creating cart:", err);
+    return { success: false, message: "Failed to create cart" };
   }
 }

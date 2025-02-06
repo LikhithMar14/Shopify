@@ -11,11 +11,15 @@ import { useCartStore } from "@/store/cart.store";
 const AddToCart = ({ cart, item }: { cart?: CartType; item: CartItemType }) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const { cartFromStore, addToCart, removeFromCart } = useCartStore(); 
 
   const handleAddToCart = async () => {
 
 
     startTransition(async () => {
+      addToCart(item)
+      console.log("HIT HIT HIT")
+
       const response = await addItemToCart(item);
 
       if (response.success) {
@@ -39,7 +43,7 @@ const AddToCart = ({ cart, item }: { cart?: CartType; item: CartItemType }) => {
   const handleRemoveCart = async () => {
 
     startTransition(async () => {
-
+      removeFromCart(item.productId)
       const res = await removeItemFromCart(item.productId);
 
       if (res.success) {
