@@ -5,7 +5,7 @@ import {
   publicRoutes,
   authRoutes,
   allowRoutes,
-  apiAuthPrefix
+  apiAuthPrefix,
 } from "@/lib/routes";
 import { NextResponse } from "next/server";
 
@@ -17,41 +17,43 @@ export default auth(async (req) => {
   const isLoggedIn = !!req.auth;
   const isPublicPath = publicRoutes.includes(path);
   const isAuthRoute = authRoutes.includes(path);
-  const isAllowRoute = allowRoutes.find((route) => path.startsWith(route));
-  const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
+  const isAllowRoute = allowRoutes.some((route) => path.startsWith(route));
+  const isApiAuthRoute = path.startsWith(apiAuthPrefix);
 
-
-  if(isApiAuthRoute){
-    return NextResponse.next()
-  }
-  if(isLoggedIn && isAuthRoute){
-    return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
-  }
-  if(isPublicPath){
-
-
-    
-    return NextResponse.next();
-  }
-  if( !isAllowRoute && !isPublicPath && !isLoggedIn){
-
-
-    return NextResponse.redirect(new URL("/login", nextUrl));
-  }
-
- 
-  
   const cookies = req.headers.get("cookie") || "";
-  if (!cookies.includes("sessionCartId")) {
+  const hasSessionCartId = cookies.includes("sessionCartId");
+
+
+  if (!hasSessionCartId) {
     const sessionCartId = crypto.randomUUID();
+    const response = NextResponse.redirect(nextUrl);
 
-
-    const response = NextResponse.next();
     response.headers.append(
       "Set-Cookie",
       `sessionCartId=${sessionCartId}; Path=/; HttpOnly; Secure`
     );
+
     return response;
+  }
+
+
+  if (isApiAuthRoute) {
+    return NextResponse.next();
+  }
+
+
+  if (isLoggedIn && isAuthRoute) {
+    return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+  }
+
+
+  if (isPublicPath) {
+    return NextResponse.next();
+  }
+
+
+  if (!isAllowRoute && !isPublicPath && !isLoggedIn) {
+    return NextResponse.redirect(new URL("/login", nextUrl));
   }
 
   return NextResponse.next();

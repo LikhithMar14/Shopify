@@ -1,8 +1,9 @@
 "use server"
 import { auth } from "@/auth"
 import db from "@/db"
+import { z } from "zod"
 import { shippingAddressType } from "@/types/shipping.types"
-import { shippingAddressSchema } from "@/types/validators"
+import { paymentMethodSchema, shippingAddressSchema } from "@/types/validators"
 export async function getUserById(userId:string){
     const user = await db.user.findFirst({
         where:{id:userId}
@@ -50,5 +51,39 @@ export async function updateUserAddress(data:shippingAddressType){
             success:false,
             message:"Failed to update the address"
         }
+    }
+}
+export async function updateUserPaymentMethod(data:z.infer<typeof paymentMethodSchema>){
+    try{
+
+        const session = await auth();
+        const currentUser = await db.user.findFirst({
+            where:{id:session?.user.id}
+        });
+        if(!currentUser)throw new Error("User not found")
+        
+        const validatedResponse = paymentMethodSchema.safeParse(data);
+        
+        if(!validatedResponse.success){
+            return {
+                success:false,
+                message:"Invalid payment method details"
+            }
+        }
+
+        const paymentMethod = validatedResponse.data;
+
+        await db.user.updateManyAndReturn({
+            where:{id:currentUser.id},
+            data:{
+                paymentMethod:paymentMethod.type
+            }
+        })
+        return {
+            success:true,
+            message:"User updated successfully"
+        }
+    }catch(err){
+        return {success: false, message: "Error in updating user"}
     }
 }

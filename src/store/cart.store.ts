@@ -54,7 +54,7 @@ export const useCartStore = create<CartStoreType>()(
 
       syncCartWithDB: async (userId) => {
         const state = get();
-        const cart = state.cartFromStore
+        const cart = state.cartFromStore  
         if (!cart.items.length) return;
 
         try {

@@ -14,7 +14,7 @@ export const Providers = ({ children }: { children: ReactNode }) => {
         enableSystem
         disableTransitionOnChange
       >
-        <SyncCartWrapper />
+        
         {children}
       </ThemeProvider>
     </SessionProvider>
@@ -24,5 +24,7 @@ export const Providers = ({ children }: { children: ReactNode }) => {
 
 const SyncCartWrapper = () => {
   const { data: session, status } = useSession();
+  console.log("STATUS: ",status)
+  console.log("UserId: ",session?.user.id)
   return status === "authenticated" && session?.user?.id ? <SyncCartOnLogin /> : null ;
 };

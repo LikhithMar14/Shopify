@@ -26,6 +26,7 @@ const CalculatePrice = (items: CartItemType[]) => {
 };
 
 export async function addItemToCart(data: CartItemType) {
+  console.log("Triggered")
   try {
     const session = await auth();
     const sessionCartId = (await cookies()).get("sessionCartId")?.value;
